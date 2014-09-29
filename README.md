@@ -7,7 +7,7 @@ it deals with saturated pixels and articats of saturation, it can remove bad or 
 
 run it as 
 
-$python coaddim.py <wild cards for the fits files> 
+$python coaddim.py \<wild cards for the fits files\> 
 
 and to get the help run the command line without arguments:
 
