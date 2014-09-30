@@ -17,6 +17,8 @@ if __name__=='__main__':
                       help='interactive plotting (with ion) and option to reject the last coadded image')
     parser.add_option('--noalign', default=False, action="store_true",
                       help='just stack images without aligning')
+    parser.add_option('--norescale', default=False, action="store_true",
+                      help='do not rescale image: otherwise the BITSCALE is set to 16')
     parser.add_option('--nosatmask', default=False, action="store_true",
                       help='do not mask saturation')
     parser.add_option('--mask', default=None, type="string",
@@ -193,7 +195,8 @@ if __name__=='__main__':
                     mydate = header0[value]
                 except:
                     print "missing keyword ",k,value
-                    mydate='2000-01-01'
+                    import datetime
+                    mydate=str(datetime.date.today())
             print "date:",mydate
 
         elif k == 'telescope':
@@ -348,6 +351,9 @@ if __name__=='__main__':
                 myexposure=exposure
             nimgs+=1
             acceptedlist.append(allimgs[i].split("/")[-1])
+    print tmp
+    raw_input("here")
+    pl.imshow(tmp)
     print mymjd,type(mymjd), int(float(mymjd))
     mymjd=float(mymjd)
     imid=int((mymjd-int(mymjd))*1e4)
@@ -407,12 +413,10 @@ if __name__=='__main__':
                     try: int(existing.split('_')[-1].split('.')[0])
                     except: existing=existing[1:]
                     outfile = base+'_' + str(np.max([int(ii.split('_')[-1].split('.')[0]) for ii in existing])  + 1) + '.fits'
-#                print "try again sometime..."
-#                sys.exit()                
 
 
     out_fits = PF.PrimaryHDU(header=header0,data=tmp)
-    out_fits.scale(type=out_fits.NumCode[16],bzero=32768.0,bscale=1.0)
+    if not options.norescale: out_fits.scale(type=out_fits.NumCode[16],bzero=32768.0,bscale=1.0)
     print 'writing',outfile
     if SAFE:
         out_fits.writeto(outfile, clobber=False)
