@@ -16,7 +16,7 @@ from scipy import *
 from scipy import cluster
 from scipy.stats import mode
 from scipy.interpolate import interp1d
-from pylab import imshow,title,figure,show
+from pylab import imshow,title,figure,show,clf,draw
 import time
 
 #import ds9
@@ -239,7 +239,7 @@ def masksaturated(data, header0, saturation):
    return data
 
 
-def correlate(fits,saturation):
+def correlate(fits,saturation,showme=False):
 
     if fits[0].shape[0] >= fits[1].shape[0]:
         larger = 0
@@ -259,14 +259,22 @@ def correlate(fits,saturation):
             arr[i,j] = fits[smaller][i,j]
 
     fits[smaller] = arr
-
+ 
 ### cropping larger down to smaller size
     arr = zeros((naxis1,naxis2),float)
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
             arr[i,j] = fits[larger][i,j]
     fits[larger] = arr 
-
+ 
+    if showme:
+        figure(2)
+        clf()
+        imshow(fits[larger]+fits[smaller])#[x0:x1,y0:y1]+tmp[x0:x1,y0:y1])
+#                          pl.imshow(PF.getdata(allimgs[i])[x0:x1,y0:y1])
+        title("new input image")
+        draw()
+   
     print "size before finding phase ",fits[smaller].shape
     print "size before finding phase ",fits[larger].shape
 
@@ -280,7 +288,7 @@ def correlate(fits,saturation):
       print 'Finding phase...'
       if CUT:    
          mask = zeros(shape(fits[larger]))
-         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
+#         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
          fft1 = fftn(fits[larger]*mask)
          ifft2 = ifftn(fits[smaller]*mask)
          R = ifftn(fft1*ifft2).real
@@ -288,13 +296,43 @@ def correlate(fits,saturation):
          fft1 = fftn(fits[larger])
          ifft2 = ifftn(fits[smaller])
          R = ifftn(fft1*ifft2).real
-#         print R
-#         imshow(R)
-#         show()
+         if np.all(R==0): return None,None
+         print R
+         figure(4)
+         imshow(R)
+         title("correlation")
+         show()
       phase = np.where(R == np.max(R))
       print "phase = " + str(phase)
-      ### Checks if img_small has negative shift ###
-    
+
+      ### Checks if img_small has negative shift ###    
+      axis2_shift,axis1_shift = phase[0],phase[1]
+      if phase[1] :
+          if phase[1] ==naxis2:
+              axis1_shift ==[0,-1,0,-1]
+          elif phase[1] > naxis1/2:
+              axis1_shift =[naxis1-phase[1],-1,0,-(naxis1-phase[1]-1)]
+          else:
+              axis1_shift =[phase[1],-1,0,-phase[1]-1]
+      else:
+          axis1_shift =[0,-1,0,-1]
+          
+      if phase[0] :
+          if phase[0] ==naxis1:
+              axis2_shift =[0,-1,0,-1]
+          elif phase[0] > naxis2/2:
+              axis2_shift =[0,-(naxis1-phase[0]+1),naxis1-phase[0],-1]
+              print  axis2_shift
+          else:
+              axis2_shift =[phase[0],-1,0,-phase[0]-1]              
+      else:
+          axis2_shift =[0,-1,0,-1]
+
+      return( fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],
+              fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]])      
+          
+  
+      '''
       if phase[0] > naxis2/2:
          axis2_shift =  phase[0] - naxis2
       else:
@@ -305,15 +343,23 @@ def correlate(fits,saturation):
       else:
          axis1_shift = phase[1]
 
+      
+
       if axis2_shift >= 0:
          if axis2_shift == 0: axis2_shift = -naxis1
          if axis1_shift >= 0:
             if axis1_shift == 0: axis1_shift = -naxis2
+            print "1",axis2_shift,axis1_shift
+            print "larger  ,[",axis2_shift,":-1,",axis1_shift,":-1]"
+            print "smaller ,[0",-axis2_shift,",0:",-axis1_shift,"]"
+
             return(  fits[larger][axis2_shift:,axis1_shift:],
                      fits[smaller][:-axis2_shift,:-axis1_shift])
             #          stack[axis2_shift:,axis1_shift:] += w*fitspad[:-axis2_shift,:-axis1_shift]
          else: #axis1_shift < 0
-
+            print "2",axis2_shift,axis1_shift
+            print "larger  ,[",axis2_shift,":-1,0:",-abs(axis1_shift),"]"
+            print "smaller ,[0:",-axis2_shift,",",abs(axis1_shift),":-1]"
             return(  fits[larger][axis2_shift:,:-abs(axis1_shift)],
                      fits[smaller][:-axis2_shift,abs(axis1_shift):])
             #         stack[axis2_shift:,:-abs(axis1_shift)] += w*fitspad[:-axis2_shift,abs(axis1_shift):]
@@ -321,17 +367,30 @@ def correlate(fits,saturation):
       else: #axis2_shift < 0
          if axis1_shift >= 0:
             if axis1_shift == 0: axis1_shift = -naxis1
-            
-            return(  fits[larger][:-abs(axis2_shift),axis1_shift:],
-                     fits[smaller][abs(axis2_shift):,:-axis1_shift])
+            print "3",axis2_shift,axis1_shift
+            axis2_shift/=2
+            axis1_shift/=2
+#            return(  fits[larger][:-abs(axis2_shift),axis1_shift:],
+#                     fits[smaller][abs(axis2_shift):,:-axis1_shift])
+#            return(  fits[larger][abs(axis2_shift):,axis1_shift:],
+#                     fits[smaller][:abs(axis2_shift),:-axis1_shift])
+            print "larger ,[0:",-abs(axis2_shift),",",axis1_shift,":-1]"
+            print "smaller,[",abs(axis2_shift),":-1,0:",-axis1_shift,"]"
+            return(  fits[smaller][abs(axis2_shift):,:-axis1_shift],
+                     fits[larger][:-abs(axis2_shift),axis1_shift:])
             #stack[:-abs(axis2_shift),axis1_shift:] += w*fitspad[abs(axis2_shift):,:-axis1_shift]
 
          else: #axis1_shift < 0
+            print "4",axis2_shift,axis1_shift
+            axis2_shift/=2
+            axis1_shift/=2
+            print "larger  ,[0:",-abs(axis2_shift),",0:",-abs(axis1_shift),"]"
+            print "smaller ,[",abs(axis2_shift),":-1,",abs(axis1_shift),":-1]"
             return(  fits[larger][:-abs(axis2_shift),:-abs(axis1_shift)],
                      fits[smaller][abs(axis2_shift):,abs(axis1_shift):])
 
             #          stack[:-abs(axis2_shift),:-abs(axis1_shift)] += w*fitspad[abs(axis2_shift):,abs(axis1_shift):]
-
+      '''
     else:
       return(fits[larger],fits[smaller])
 

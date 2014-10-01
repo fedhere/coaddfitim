@@ -11,6 +11,7 @@ from coaddimconfig import *
 print keys
 
 SAFE=1
+
 if __name__=='__main__':
     parser = optparse.OptionParser(usage="coaddim.py <path to images>", conflict_handler="resolve")
     parser.add_option('-i','--interactive', default=False, action="store_true",
@@ -75,6 +76,7 @@ if __name__=='__main__':
         options,  args = parser.parse_args(args=['--help'])
         sys.exit(0)
     SHOW=False
+    pl.ion()
     if options.interactive:
          pl.ion()
          SHOW=True
@@ -125,6 +127,7 @@ if __name__=='__main__':
     image0=PF.open(inpath)
     header0=image0[0].header
     nfiles=len(allimgs)
+#    allimgs=np.array(allimgs)[-1:0:-1]
 
     for k,value in keys.items():
         print "looking for :",value
@@ -274,8 +277,10 @@ if __name__=='__main__':
             os.system(cmd)
         if SHOW:
             print "original image here we go!"
+            pl.figure(1)
             pl.imshow(PF.getdata(allimgs[0]))
-            pl.show()
+            pl.title("original")
+            pl.draw()
             inrange=raw_input("input new range as x0,y0,x1,y1\n")
             if not inrange:
                  x0,y0,x1,y1=0,0,-1,-1
@@ -291,54 +296,62 @@ if __name__=='__main__':
         if ALIGN:
             print "here", nfiles
             for i in range(1,nfiles):
-                print "working on",allimgs[i]
+                print "working on",allimgs[i], tmp[0][:10]
                 image=PF.open(allimgs[i])
                 header=image[0].header
-                if SHOW:
-                    pl.imshow(PF.getdata(allimgs[i])[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]])
-                (t1,t2)=correlate([tmp,PF.getdata(allimgs[i])[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]],mysaturate)
+                
+                (t1,t2)=correlate([tmp,PF.getdata(allimgs[i])[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]],mysaturate, showme=SHOW)
+
+                if  t1==None and t2==None:
+                    print "image correlation failed"
+                    continue
                 print t1.shape
                 print t2.shape
-#         s2= header['STDDEV']
-        #w2=1.0/s1#sigclippedstd(t2)
-	#print w2
-        #w1=1.0/s2#sigclippedstd(t1)
-	#print w1
-	#w1=w1*w1
-	#w2=w2*w2	
-        #ratio = (w1+w2)
-                w1=1
-                w2=1	
-                ratio = 1
-                print t1.shape
-                print t2.shape
+
+                #         s2= header['STDDEV']
+                #w2=1.0/s1#sigclippedstd(t2)
+                #print w2
+                #w1=1.0/s2#sigclippedstd(t1)
+                #print w1
+                #w1=w1*w1
+                #w2=w2*w2	
+                #ratio = (w1+w2)
+
+                w1,w2,ratio=1,1,1
                 newtmp=(t1*w1+t2*w2)/ratio
                 acc=''
                 if SHOW:
-                    print x0,y0,x1,y1
-                    pl.imshow(tmp[x0:x1,y0:y1])#+80:750+160,750+160:750+260])
-                    pl.show()
+                    print "image cut:", x0,y0,x1,y1
+                    pl.figure(3)
+                    pl.clf()
+                    pl.imshow(newtmp[x0:x1,y0:y1])#+80:750+160,750+160:750+260])
+                    pl.title("stack %d"%i)
+                    pl.draw()
                     acc=raw_input("accept this image? Y/n")
                     print acc
-                if not acc.lower().startswith('n'):
-                    tmp=newtmp
-                    acceptedlist.append(allimgs[i].split("/")[-1])
-                    try:
-                        myexposure += header[keys['exposure']]
-                    except:
-                        myexposure=exposure
-                    nimgs+=1
-
+                    if not acc.lower().startswith('n'):
+                        print "accepting this image and phase"
+                        tmp=newtmp
+                        acceptedlist.append(allimgs[i].split("/")[-1])
+                        try:
+                            myexposure += header[keys['exposure']]
+                        except:
+                            myexposure+=exposure
+                        nimgs+=1
+                    else:
+                        pl.imshow(tmp[x0:x1,y0:y1])
+                        pl.title("stack %d"%i)
+                        pl.draw()
                 else:
                     tmp=newtmp
                     acceptedlist.append(allimgs[i].split("/")[-1])
                     try:
                         myexposure += header[keys['exposure']]
                     except:
-                        myexposure=exposure
+                        myexposure+=exposure
                     nimgs+=1
 
-                    #        print tmp[0,0:100]
+                #print tmp[0,0:100]
                     #         s1=sqrt(s1*s1+s2*s2)
     else:
         for i in range(1,nfiles):
@@ -351,9 +364,8 @@ if __name__=='__main__':
                 myexposure=exposure
             nimgs+=1
             acceptedlist.append(allimgs[i].split("/")[-1])
-    print tmp
-    raw_input("here")
     pl.imshow(tmp)
+    pl.title("final image")
     print mymjd,type(mymjd), int(float(mymjd))
     mymjd=float(mymjd)
     imid=int((mymjd-int(mymjd))*1e4)
