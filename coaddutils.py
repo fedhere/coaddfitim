@@ -308,28 +308,46 @@ def correlate(fits,saturation,showme=False):
       ### Checks if img_small has negative shift ###    
       axis2_shift,axis1_shift = phase[0],phase[1]
       if phase[1] :
-          if phase[1] ==naxis2:
-              axis1_shift ==[0,-1,0,-1]
-          elif phase[1] > naxis1/2:
-              axis1_shift =[naxis1-phase[1],-1,0,-(naxis1-phase[1]-1)]
+          if phase[1] == naxis2:
+              axis1_shift ==[0,naxis2,0,naxis2]
+          elif phase[1] > naxis2/2:
+              print "phase1>naxis2/2"
+              axis1_shift =[naxis2-phase[1],naxis2,0,-(naxis2-phase[1])]
           else:
-              axis1_shift =[phase[1],-1,0,-phase[1]-1]
+              print "phase1<=naxis1/2"
+              axis1_shift =[phase[1],naxis2,0,-phase[1]]
       else:
-          axis1_shift =[0,-1,0,-1]
+          print "phase1=0"
+          axis1_shift =[0,naxis2,0,naxis2]
           
       if phase[0] :
-          if phase[0] ==naxis1:
-              axis2_shift =[0,-1,0,-1]
-          elif phase[0] > naxis2/2:
-              axis2_shift =[0,-(naxis1-phase[0]+1),naxis1-phase[0],-1]
+          if phase[0] == naxis1:
+              axis2_shift =[0,naxis1,0,naxis1]
+          elif phase[0] > naxis1/2:
+              print "phase0>naxis2/2"
+              axis2_shift =[0,-(naxis1-phase[0]),naxis1-phase[0],naxis1]
               print  axis2_shift
           else:
-              axis2_shift =[phase[0],-1,0,-phase[0]-1]              
+              print "phase0<naxis/2"
+              axis2_shift =[phase[0],naxis1,0,-phase[0]]              
       else:
-          axis2_shift =[0,-1,0,-1]
+          print "phase0=0"
+          axis2_shift =[0,naxis1,0,naxis1]
 
-      return( fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],
-              fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]])      
+      print fits[smaller].shape,fits[larger].shape
+      im1,im2= fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]]
+
+      print im1.shape,im2.shape
+      if not im1.shape == im2.shape:
+          print "shape mismatch"
+          i11=im1.shape[0]
+          i12=im1.shape[1]
+          i21=im2.shape[0]
+          i22=im2.shape[1]
+          print i11,i12,i21,i22
+          im1=im1[0:min(i11,i21),0:min(i12,i22)]
+          im2=im2[0:min(i11,i21),0:min(i12,i22)]
+      return im1,im2 
           
   
       '''
