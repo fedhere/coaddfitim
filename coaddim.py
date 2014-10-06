@@ -5,12 +5,16 @@ import pylab as pl
 import numpy as np
 
 import pyfits as PF
+import Image
+
 
 from coaddutils import *
 from coaddimconfig import *
 print keys
 
 SAFE=1
+colors={0:'R',1:'G',2:'B'}
+
 
 if __name__=='__main__':
     parser = optparse.OptionParser(usage="coaddim.py <path to images>", conflict_handler="resolve")
@@ -62,13 +66,17 @@ if __name__=='__main__':
                       help='the telescope name header keyword')
     parser.add_option('--impath', default='./', type="string",
                       help='path to images')
+    parser.add_option('--jpg',default=False,action="store_true",
+                       help="using jpg's (or png, tif...)")
+    parser.add_option('--color',default=1,type=int,
+                       help="RGB color channel for color images")
     parser.add_option('--swarp', default=False, action="store_true",
                       help='run swarp command as well')
     parser.add_option('--onlyshow', default=False, action="store_true",
                       help='just check keywords and show output names')
     parser.add_option('-v','--verbose', default=False, action="store_true",
                       help='verbose mode')
-
+    
     options,  args = parser.parse_args()
     print options,args
 
@@ -124,8 +132,18 @@ if __name__=='__main__':
     print allimgs
     allimgs=sorted(set(allimgs),key=allimgs.index) 
     inpath=allimgs[0]    
-    image0=PF.open(inpath)
-    header0=image0[0].header
+    
+    if options.jpg:
+        im=Image.open(inpath)
+        tmp=np.array(im)
+        tmp=tmp[:,:,options.color]
+        hdu =PF.PrimaryHDU(tmp)
+        header0=hdu.header
+        hdu.writeto(inpath+'_'+colors[options.color]+'.fits',clobber=True)
+    else:
+        image0=PF.open(inpath)
+        tmp=PF.getdata(allimgs[0])
+        header0=image0[0].header
     nfiles=len(allimgs)
 #    allimgs=np.array(allimgs)[-1:0:-1]
 
@@ -138,7 +156,7 @@ if __name__=='__main__':
                 except:
                     print "missing required keyword:",k,value
                     sys.exit()
-                myexposure = header0[value]
+                myexposure = float(header0[value])
             print "exposure :",myexposure
 
         elif k=='saturate' :
@@ -278,7 +296,7 @@ if __name__=='__main__':
         if SHOW:
             print "original image here we go!"
             pl.figure(1)
-            pl.imshow(PF.getdata(allimgs[0]))
+            pl.imshow(tmp)
             pl.title("original")
             pl.draw()
             inrange=raw_input("input new range as x0,y0,x1,y1\n")
@@ -289,18 +307,26 @@ if __name__=='__main__':
 
         nimgs=1
         acceptedlist=[allimgs[0].split("/")[-1]] 
-        tmp=PF.getdata(allimgs[0])  
         if options.mask:
             print pixmask[0],pixmask[2],pixmask[1],pixmask[3]
             tmp=tmp[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]
         if ALIGN:
             print "here", nfiles
             for i in range(1,nfiles):
-                print "working on",allimgs[i], tmp[0][:10]
-                image=PF.open(allimgs[i])
-                header=image[0].header
-                
-                (t1,t2)=correlate([tmp,PF.getdata(allimgs[i])[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]],mysaturate, showme=SHOW)
+                print "working on",allimgs[i]
+                if options.jpg:
+                    image=Image.open(allimgs[i])
+                    tmp2=np.array(image)
+                    tmp2=tmp2[:,:,options.color][pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]
+                    hdu = PF.PrimaryHDU(tmp2)
+                    header=hdu.header
+                    hdu.writeto(allimgs[i]+'_'+colors[options.color]+'.fits',clobber=True)
+                else:
+                    image=PF.open(allimgs[i])
+                    tmp2= PF.getdata(allimgs[i])[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]
+                    header=image[0].header
+
+                (t1,t2)=correlate([tmp,tmp2],mysaturate, showme=SHOW)
 
                 if  t1==None and t2==None:
                     print "image correlation failed"
@@ -334,7 +360,7 @@ if __name__=='__main__':
                         tmp=newtmp
                         acceptedlist.append(allimgs[i].split("/")[-1])
                         try:
-                            myexposure += header[keys['exposure']]
+                            myexposure += float(header[keys['exposure']])
                         except:
                             myexposure+=exposure
                         nimgs+=1
@@ -346,7 +372,7 @@ if __name__=='__main__':
                     tmp=newtmp
                     acceptedlist.append(allimgs[i].split("/")[-1])
                     try:
-                        myexposure += header[keys['exposure']]
+                        myexposure += float(header[keys['exposure']])
                     except:
                         myexposure+=exposure
                     nimgs+=1
@@ -359,7 +385,7 @@ if __name__=='__main__':
             header=image[0].header
             tmp+=PF.getdata(allimgs[i])
             try:
-                myexposure += header[keys['exposure']]
+                myexposure += float(header[keys['exposure']])
             except:
                 myexposure=exposure
             nimgs+=1
@@ -429,6 +455,8 @@ if __name__=='__main__':
 
     out_fits = PF.PrimaryHDU(header=header0,data=tmp)
     if not options.norescale: out_fits.scale(type=out_fits.NumCode[16],bzero=32768.0,bscale=1.0)
+    if options.jpg:
+        outfile=outfile[:-5]+'_'+colors[options.color]+'.fits'
     print 'writing',outfile
     if SAFE:
         out_fits.writeto(outfile, clobber=False)
