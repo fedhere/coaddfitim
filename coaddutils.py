@@ -59,39 +59,39 @@ def increment_writename(outpath, writename):
 
     return writename
     
-def fixim(data):
-   #if regions of the ccd need to be masked 
-   #because of a damaged chip, or a stadd that is difficult to correct, 
-   #they get set to 0 here
-   
-   print data.shape
-   print maskcenters
-   n1=data.shape[0]
-   n2=data.shape[1]
-   x=np.array(range(n1*n2))
-   y=np.array(range(n1*n2))
-   
-   if len(maskcenters)==0:
-      return data
-   x=x%n1
-   y=y/n2
-
-   x=np.reshape(x,(n2,n1))
-   y=np.reshape(y,(n1,n2))
-
-   for c in maskcenters:
-      print c
-      print x
-      print y
-      maxsize=min(n1,n2)
-      w=where(((x[:maxsize,:maxsize]-c[0][0])**2 + (y[:maxsize,:maxsize]-c[0][1])**2)<c[1]*c[1])
-      data[w]=0
+def fixim(data,maskcenters):
+    #if regions of the ccd need to be masked 
+    #because of a damaged chip, or a stadd that is difficult to correct, 
+    #they get set to 0 here
+    
+    print data.shape
+    print "mask centers",maskcenters
+    n1=data.shape[0]
+    n2=data.shape[1]
+    x=np.array(range(n1*n2))
+    y=np.array(range(n1*n2))
+    
+    if len(maskcenters)==0:
+        return data
+    x=x%n1
+    y=y/n2
+    
+    x=np.reshape(x,(n2,n1))
+    y=np.reshape(y,(n1,n2))
+    
+    for c in maskcenters:
+        print c
+        print x
+        print y
+        maxsize=min(n1,n2)
+        w=where(((x[:maxsize,:maxsize]-c[0][0])**2 + (y[:maxsize,:maxsize]-c[0][1])**2)<c[1]*c[1])
+        data[w]=0
       
       
-#   imshow(data[maskcenters[0][0][0]-maskcenters[0][1]*5:maskcenters[0][0][0]+maskcenters[0][1]*5,maskcenters[0][0][1]-maskcenters[0][1]*5:maskcenters[0][0][1]+maskcenters[0][1]*5])
-#   show()
-#   sys.exit()
-   return(data)
+        #   imshow(data[maskcenters[0][0][0]-maskcenters[0][1]*5:maskcenters[0][0][0]+maskcenters[0][1]*5,maskcenters[0][0][1]-maskcenters[0][1]*5:maskcenters[0][0][1]+maskcenters[0][1]*5])
+        #   show()
+        #   sys.exit()
+    return(data)
 
 
 

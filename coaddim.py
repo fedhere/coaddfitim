@@ -408,7 +408,7 @@ if __name__=='__main__':
             #tmp = where(tmp>SATURATION,SATURATION,tmp)#
             
     if len(maskcenters)>0:
-        tmp=fixim(tmp)
+        tmp=fixim(tmp,maskcenters)
     if myexposure != exposure:
         print "some image must have failed or something.... total exposure shorter than single exposure x number of files..."
         
