@@ -1,6 +1,5 @@
 import os,sys,glob
 import optparse
-import glob
 import pylab as pl
 import numpy as np
 
@@ -401,7 +400,7 @@ if __name__=='__main__':
     if not options.nosatmask:
         tmp=masksaturated(tmp, header0,mysaturate)
     if len(tmp)> 0:
-        median = median(tmp)
+        median = np.median(tmp)
     else:
         median = 0
             #print 'median flux:',median

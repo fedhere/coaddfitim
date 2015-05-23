@@ -8,7 +8,7 @@
 ################################################################
 
 from scipy.fftpack import *
-import sys,os,time
+import sys,os
 import pyfits as PF
 from numpy import *
 import numpy as np 
@@ -17,7 +17,6 @@ from scipy import cluster
 from scipy.stats import mode
 from scipy.interpolate import interp1d
 from pylab import imshow,title,figure,show,clf,draw
-import time
 
 #import ds9
 SHIFT=1
@@ -68,16 +67,16 @@ def fixim(data):
    print maskcenters
    n1=data.shape[0]
    n2=data.shape[1]
-   x=array(range(n1*n2))
-   y=array(range(n1*n2))
+   x=np.array(range(n1*n2))
+   y=np.array(range(n1*n2))
    
    if len(maskcenters)==0:
       return data
    x=x%n1
    y=y/n2
 
-   x=reshape(x,(n2,n1))
-   y=reshape(y,(n1,n2))
+   x=np.reshape(x,(n2,n1))
+   y=np.reshape(y,(n1,n2))
 
    for c in maskcenters:
       print c
@@ -104,12 +103,12 @@ def dist(pair):
 
 def sigclippedstd(arr):
    iter = 0
-   oldarr=zeros(len(arr.flatten())+1,float)
-   while (iter < 20 and mean(arr)>median(arr)): 
+   oldarr=np.zeros(len(arr.flatten())+1,float)
+   while (iter < 20 and np.mean(arr)>median(arr)): 
 #len(arr.flatten())<len(oldarr.flatten())):
     	oldarr=arr
-        m=mean(arr)
-        s=std(arr)
+        m=np.mean(arr)
+        s=np.std(arr)
 #	print s, m
 	arr=arr.clip(min=m-1*s,max=m+1*s)
 	iter+=1
@@ -148,19 +147,19 @@ def masksaturated(data, header0, saturation):
    
    index=[index1,index2]
    mode= mymode(data)
-   wh=where(data<(mode)-mode*0.5)
+   wh=np.where(data<(mode)-mode*0.5)
    
    allsat=[]
    centers = []
    for i in range(20,3,-1):
-      mocdata=zeros((data.shape[0],data.shape[1]),float)
+      mocdata=np.zeros((data.shape[0],data.shape[1]),float)
       data1=data[:-i,:]
       data2=data[i:,:]
       k1=i/2
       k2=data2.shape[0]
       data3=data[k1:k2+k1,:]
 
-      sat= where ((data1>saturation) & (data2 > saturation) & (data3 <saturation))
+      sat= np.where ((data1>saturation) & (data2 > saturation) & (data3 <saturation))
       sat=array(zip(*sat))
       
       print "sat" , sat
@@ -185,7 +184,7 @@ def masksaturated(data, header0, saturation):
    allsat = array(allsat)
 #   print allsat
    if len(allsat)==0:
-	wh=where(data>saturation)
+	wh=np.where(data>saturation)
    	data[wh[0],wh[1]]=saturation
  
 	return data
@@ -194,14 +193,14 @@ def masksaturated(data, header0, saturation):
 
 #   print clusters
    for i in range(max(clusters)): 
-      if len(where(clusters == i+1)[0])>1:
-         centers.append(mean(allsat[where(clusters==i+1)[0]], axis=0))
-         print "centers", mean(allsat[where(clusters==i+1)[0]], axis=0), len(where(clusters==i)[0])
+      if len(np.where(clusters == i+1)[0])>1:
+         centers.append(np.mean(allsat[np.where(clusters==i+1)[0]], axis=0))
+         print "centers", np.mean(allsat[np.where(clusters==i+1)[0]], axis=0), len(np.where(clusters==i)[0])
    
    print  data1.shape,data2.shape
    for x in centers:
       print "circle(",x[1],",",x[0],",10)"
-      ind=where(sqrt((index1-x[1])**2+(index2-x[0])**2)<RAD)
+      ind=np.where(sqrt((index1-x[1])**2+(index2-x[0])**2)<RAD)
 #      print ind[0],ind[1]
       data[ind[0],ind[1]]=saturation
  
@@ -233,7 +232,7 @@ def masksaturated(data, header0, saturation):
       data[wh[0],wh[1]-1]=saturation
    except:
       pass   
-   wh=where(data>saturation)
+   wh=np.where(data>saturation)
    data[wh[0],wh[1]]=saturation
  
    return data
@@ -253,7 +252,7 @@ def correlate(fits,saturation,showme=False):
 
 #    print fits[0],fits[1]
 ### passing data to dummy array
-    arr = zeros((naxis1,naxis2),float)
+    arr = np.zeros((naxis1,naxis2),float)
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
             arr[i,j] = fits[smaller][i,j]
@@ -261,7 +260,7 @@ def correlate(fits,saturation,showme=False):
     fits[smaller] = arr
  
 ### cropping larger down to smaller size
-    arr = zeros((naxis1,naxis2),float)
+    arr = np.zeros((naxis1,naxis2),float)
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
             arr[i,j] = fits[larger][i,j]
@@ -287,7 +286,7 @@ def correlate(fits,saturation,showme=False):
     if SHIFT:
       print 'Finding phase...'
       if CUT:    
-         mask = zeros(shape(fits[larger]))
+         mask = np.zeros(shape(fits[larger]))
 #         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
          fft1 = fftn(fits[larger]*mask)
          ifft2 = ifftn(fits[smaller]*mask)
