@@ -7,7 +7,7 @@
 #last modified 10/25/2011
 ################################################################
 
-from scipy.fftpack import *
+import scipy.fftpack as sfft
 import sys,os
 import pyfits as PF
 from numpy import *
@@ -17,6 +17,7 @@ from scipy import cluster
 from scipy.stats import mode
 from scipy.interpolate import interp1d
 from pylab import imshow,title,figure,show,clf,draw
+
 
 #import ds9
 SHIFT=1
@@ -288,13 +289,13 @@ def correlate(fits,saturation,showme=False):
       if CUT:    
          mask = np.zeros(shape(fits[larger]))
 #         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
-         fft1 = fftn(fits[larger]*mask)
-         ifft2 = ifftn(fits[smaller]*mask)
-         R = ifftn(fft1*ifft2).real
+         fft1 = sfft.fftn(fits[larger]*mask)
+         ifft2 = sfft.ifftn(fits[smaller]*mask)
+         R = sfft.ifftn(fft1*ifft2).real
       else:
-         fft1 = fftn(fits[larger])
-         ifft2 = ifftn(fits[smaller])
-         R = ifftn(fft1*ifft2).real
+         fft1 = sfft.fftn(fits[larger])
+         ifft2 = sfft.ifftn(fits[smaller])
+         R = sfft.ifftn(fft1*ifft2).real
          if np.all(R==0): return None,None
          print R
          figure(4)

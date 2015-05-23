@@ -417,7 +417,7 @@ if __name__=='__main__':
     header0[keys['exposure']]=myexposure/nimgs
     header0.update('MJD-OBS','%f' % mymjd)
     readnoise=float(myrdnoise)#/sqrt(nimgs)
-    readnoise*=sqrt(nimgs)
+    readnoise*=np.sqrt(nimgs)
     readnoise=float(readnoise)
     header0.update('IMAGTYPE', '%s' % imtype, 'Coadded (summed stack)')
     header0.update('NCOADDED', '%d' % nfiles)
