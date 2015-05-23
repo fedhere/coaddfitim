@@ -152,7 +152,7 @@ if __name__=='__main__':
             if not myexposure:
                 try:
                     print header0[value]
-                except:
+                except KeyError:
                     print "missing required keyword:",k,value
                     sys.exit()
                 myexposure = float(header0[value])
@@ -163,7 +163,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     mysaturate = header0[value]
-                except:
+                except KeyError:
                     print "missing required keyword ",k,value
                     sys.exit()
             print "saturate :",mysaturate
@@ -173,7 +173,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     mygain = header0[value]
-                except:
+                except KeyError:
                     print "missing required keyword ",k,value
                     sys.exit()
             print "gain :",mygain
@@ -183,7 +183,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     myrdnoise = header0[value]
-                except:
+                except KeyError:
                     print "missing required keyword ",k,value
                     sys.exit()
             print "read noise :",myrdnoise
@@ -193,7 +193,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     myobject = header0[value]
-                except:
+                except KeyError:
                     print "missing required keyword ",k,value
                     myobject='MYSTERYOBJECT'
             print "object:",myobject
@@ -203,7 +203,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     mymjd = header0[value]
-                except:
+                except KeyError:
                     print "missing keyword ",k,value
                     mymjd=0.0
             print "mjd :",mymjd
@@ -213,7 +213,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     mydate = header0[value]
-                except:
+                except KeyError:
                     print "missing keyword ",k,value
                     import datetime
                     mydate=str(datetime.date.today())
@@ -224,7 +224,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     myscope=header0[value]                       
-                except:
+                except KeyError:
                     print "missing keyword ",k,value
                     myscope='SOMESCOPE'
             print "telescope: ",myscope
@@ -234,7 +234,7 @@ if __name__=='__main__':
                 try:
                     print header0[value]
                     myfilter = header0[value]
-                except:
+                except KeyError:
                     print "missing keyword ",k,value
                     myfilter='UNKNOWN'
             print "filter: ",myfilter
@@ -360,7 +360,7 @@ if __name__=='__main__':
                         acceptedlist.append(allimgs[i].split("/")[-1])
                         try:
                             myexposure += float(header[keys['exposure']])
-                        except:
+                        except KeyError:
                             myexposure+=exposure
                         nimgs+=1
                     else:
@@ -372,7 +372,7 @@ if __name__=='__main__':
                     acceptedlist.append(allimgs[i].split("/")[-1])
                     try:
                         myexposure += float(header[keys['exposure']])
-                    except:
+                    except KeyError:
                         myexposure+=exposure
                     nimgs+=1
 
@@ -385,7 +385,7 @@ if __name__=='__main__':
             tmp+=PF.getdata(allimgs[i])
             try:
                 myexposure += float(header[keys['exposure']])
-            except:
+            except KeyError:
                 myexposure=exposure
             nimgs+=1
             acceptedlist.append(allimgs[i].split("/")[-1])
@@ -448,7 +448,9 @@ if __name__=='__main__':
                 else :
                     existing=sorted([f for f in os.listdir(impath) if base in f and f.endswith('.fits')])
                     try: int(existing.split('_')[-1].split('.')[0])
-                    except: existing=existing[1:]
+                    except: 
+                        existing=existing[1:]
+                        pass
                     outfile = base+'_' + str(np.max([int(ii.split('_')[-1].split('.')[0]) for ii in existing])  + 1) + '.fits'
 
 

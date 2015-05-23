@@ -14,8 +14,7 @@ from numpy import *
 import numpy as np 
 from scipy import *
 from scipy import cluster
-from scipy.stats import mode
-from scipy.interpolate import interp1d
+#from scipy.stats import mode
 from pylab import imshow,title,figure,show,clf,draw
 
 
@@ -103,16 +102,16 @@ def dist(pair):
 
 
 def sigclippedstd(arr):
-   iter = 0
-   oldarr=np.zeros(len(arr.flatten())+1,float)
-   while (iter < 20 and np.mean(arr)>np.median(arr)): 
-#len(arr.flatten())<len(oldarr.flatten())):
-    	oldarr=arr
+   iterator = 0
+   #oldarr=np.zeros(len(arr.flatten())+1,float)
+   while (iterator < 20 and np.mean(arr)>np.median(arr)): 
+       #len(arr.flatten())<len(oldarr.flatten())):
+    	#oldarr=arr
         m=np.mean(arr)
         s=np.std(arr)
 #	print s, m
 	arr=arr.clip(min=m-1*s,max=m+1*s)
-	iter+=1
+	iterator+=1
    return(s)	
 
 
@@ -137,8 +136,8 @@ def masksaturated(data, header0, saturation):
    # low in some telescopes. that must be fixed 
    #since saturated pixels really mess up the correlation and 
    #someetime saturation occurs BELOW the saturation limit
-   n1=data.shape[0]
-   n2=data.shape[1]
+   #n1=data.shape[0]
+   #n2=data.shape[1]
    index = np.array(range(data.shape[0]*data.shape[1]))
    print index
    index1=index % data.shape[1]
@@ -239,8 +238,8 @@ def masksaturated(data, header0, saturation):
    return data
 
 
-def correlate(fits,saturation,showme=False):
-
+def correlate(fits,saturation, showme=False):
+    print saturation 
     if fits[0].shape[0] >= fits[1].shape[0]:
         larger = 0
         smaller = 1
@@ -309,7 +308,7 @@ def correlate(fits,saturation,showme=False):
       axis2_shift,axis1_shift = phase[0],phase[1]
       if phase[1] :
           if phase[1] == naxis2:
-              axis1_shift ==[0,naxis2,0,naxis2]
+              axis1_shift =[0,naxis2,0,naxis2]
           elif phase[1] > naxis2/2:
               print "phase1>naxis2/2"
               axis1_shift =[naxis2-phase[1],naxis2,0,-(naxis2-phase[1])]
@@ -408,7 +407,7 @@ def correlate(fits,saturation,showme=False):
                      fits[smaller][abs(axis2_shift):,abs(axis1_shift):])
 
             #          stack[:-abs(axis2_shift),:-abs(axis1_shift)] += w*fitspad[abs(axis2_shift):,abs(axis1_shift):]
-      '''
+
     else:
       return(fits[larger],fits[smaller])
 
@@ -427,3 +426,4 @@ def correlate(fits,saturation,showme=False):
     
     #coadded= 
     #return (fits[larger][int(slicex1[0]):int(slicex1[1]), int(slicey1[0]):int(slicey1[1])],fits[smaller][int(slicex2[0]):int(slicex2[1]), int(slicey2[0]):int(slicey2[1])])
+      '''
