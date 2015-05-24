@@ -1,3 +1,5 @@
+[![Code Health](https://landscape.io/github/fedhere/coaddfitim/master/landscape.svg?style=flat)](https://landscape.io/github/fedhere/coaddfitim/master)
+
 coaddfitim
 ==========
 
