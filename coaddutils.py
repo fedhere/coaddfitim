@@ -8,7 +8,8 @@
 ################################################################
 
 import scipy.fftpack as sfft
-import sys,os
+#import sys
+import os
 import pyfits as PF
 from numpy import *
 import numpy as np 
@@ -87,7 +88,10 @@ def fixim(data,maskcenters):
         data[w]=0
       
       
-        #   imshow(data[maskcenters[0][0][0]-maskcenters[0][1]*5:maskcenters[0][0][0]+maskcenters[0][1]*5,maskcenters[0][0][1]-maskcenters[0][1]*5:maskcenters[0][0][1]+maskcenters[0][1]*5])
+        #   imshow(data[maskcenters[0][0][0]-maskcenters[0][1]*5:\
+            #maskcenters[0][0][0]+maskcenters[0][1]*5,\
+        #maskcenters[0][0][1]-maskcenters[0][1]*5:\
+        #maskcenters[0][0][1]+maskcenters[0][1]*5])
         #   show()
         #   sys.exit()
     return(data)
@@ -102,17 +106,17 @@ def dist(pair):
 
 
 def sigclippedstd(arr):
-   iterator = 0
-   #oldarr=np.zeros(len(arr.flatten())+1,float)
-   while (iterator < 20 and np.mean(arr)>np.median(arr)): 
-       #len(arr.flatten())<len(oldarr.flatten())):
+    iterator = 0
+    #oldarr=np.zeros(len(arr.flatten())+1,float)
+    while (iterator < 20 and np.mean(arr)>np.median(arr)): 
+        #len(arr.flatten())<len(oldarr.flatten())):
     	#oldarr=arr
         m=np.mean(arr)
         s=np.std(arr)
-#	print s, m
+        #	print s, m
 	arr=arr.clip(min=m-1*s,max=m+1*s)
 	iterator+=1
-   return(s)	
+    return(s)	
 
 
 def mymode(data):
@@ -124,8 +128,8 @@ def mymode(data):
     maxcount = max(counts.values())
     modelist = []
     for x in counts:
-       if counts[x] == maxcount:
-              modelist.append(x)
+        if counts[x] == maxcount:
+            modelist.append(x)
     return modelist[0]
 
 
@@ -206,11 +210,11 @@ def masksaturated(data, header0, saturation):
  
     try:
         data[wh[0],wh[1]]=saturation
-    except:
+    except IndexError:
         pass
     try:
         data[wh[0]-1,wh[1]-1]=saturation
-    except  IndexError:
+    except  IndexError :
         pass
     try:
         data[wh[0]+1,wh[1]+1]=saturation
@@ -226,11 +230,11 @@ def masksaturated(data, header0, saturation):
         pass
     try:
         data[wh[0]-1,wh[1]]=saturation
-    except:
+    except IndexError:
         pass
     try:
         data[wh[0],wh[1]-1]=saturation
-    except:
+    except IndexError:
         pass   
     wh=np.where(data>saturation)
     data[wh[0],wh[1]]=saturation
@@ -269,7 +273,8 @@ def correlate(fits,saturation, showme=False):
     if showme:
         figure(2)
         clf()
-        imshow(fits[larger]+fits[smaller])#[x0:x1,y0:y1]+tmp[x0:x1,y0:y1])
+        imshow(fits[larger]+fits[smaller])
+         #[x0:x1,y0:y1]+tmp[x0:x1,y0:y1])
 #                          pl.imshow(PF.getdata(allimgs[i])[x0:x1,y0:y1])
         title("new input image")
         draw()
@@ -334,7 +339,10 @@ def correlate(fits,saturation, showme=False):
             axis2_shift =[0,naxis1,0,naxis1]
             
         print fits[smaller].shape,fits[larger].shape
-        im1,im2= fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]]
+        im1,im2= fits[larger][axis2_shift[0]:axis2_shift[1],\
+                              axis1_shift[0]:axis1_shift[1]],\
+            fits[smaller][axis2_shift[2]:axis2_shift[3],\
+                          axis1_shift[2]:axis1_shift[3]]
         
         print im1.shape,im2.shape
         if not im1.shape == im2.shape:
