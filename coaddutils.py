@@ -130,112 +130,112 @@ def mymode(data):
 
 
 def masksaturated(data, header0, saturation):
-   #this function looks for saturated pixels 
-   # and also fixes the pixels around and inside of saturation regious
-   # where saturation occcurs the core of stars counts may be artificially
-   # low in some telescopes. that must be fixed 
-   #since saturated pixels really mess up the correlation and 
-   #someetime saturation occurs BELOW the saturation limit
-   #n1=data.shape[0]
-   #n2=data.shape[1]
-   index = np.array(range(data.shape[0]*data.shape[1]))
-   print index
-   index1=index % data.shape[1]
-   index2=index / data.shape[1]
-   index1=index1.reshape(data.shape[0],data.shape[1])
-   index2=index2.reshape(data.shape[0],data.shape[1])
-   
-   index=[index1,index2]
-   mode= mymode(data)
-   wh=np.where(data<(mode)-mode*0.5)
-   
-   allsat=[]
-   centers = []
-   for i in range(20,3,-1):
-      mocdata=np.zeros((data.shape[0],data.shape[1]),float)
-      data1=data[:-i,:]
-      data2=data[i:,:]
-      k1=i/2
-      k2=data2.shape[0]
-      data3=data[k1:k2+k1,:]
+    #this function looks for saturated pixels 
+    # and also fixes the pixels around and inside of saturation regious
+    # where saturation occcurs the core of stars counts may be artificially
+    # low in some telescopes. that must be fixed 
+    #since saturated pixels really mess up the correlation and 
+    #someetime saturation occurs BELOW the saturation limit
+    #n1=data.shape[0]
+    #n2=data.shape[1]
+    index = np.array(range(data.shape[0]*data.shape[1]))
+    print index
+    index1=index % data.shape[1]
+    index2=index / data.shape[1]
+    index1=index1.reshape(data.shape[0],data.shape[1])
+    index2=index2.reshape(data.shape[0],data.shape[1])
+    
+    index=[index1,index2]
+    mode= mymode(data)
+    wh=np.where(data<(mode)-mode*0.5)
+    
+    allsat=[]
+    centers = []
+    for i in range(20,3,-1):
+        mocdata=np.zeros((data.shape[0],data.shape[1]),float)
+        data1=data[:-i,:]
+        data2=data[i:,:]
+        k1=i/2
+        k2=data2.shape[0]
+        data3=data[k1:k2+k1,:]
+        
+        sat= np.where ((data1>saturation) & (data2 > saturation) & (data3 <saturation))
+        sat=np.array(zip(*sat))
+        
+        print "sat" , sat
+        if len(sat)<=1:
+            continue
 
-      sat= np.where ((data1>saturation) & (data2 > saturation) & (data3 <saturation))
-      sat=np.array(zip(*sat))
-      
-      print "sat" , sat
-      if len(sat)<=1:
-         continue
-
-      for s in sat:
-         print s[1],s[0]
-         allsat.append([s[0],s[1]])
-         mocdata[s[0],s[1]]=saturation
-#         imshow(mocdata)
-#         show()
-#      print sat
-
-
-      outfilehere="tmp_%d.fits"%i
-      out_fits = PF.PrimaryHDU(header=header0,data=mocdata)
-      out_fits.scale(type=out_fits.NumCode[16],bzero=32768.0,bscale=1.0)
-      print 'writing',outfilehere
-      out_fits.writeto(outfilehere, clobber=True)
-
-   allsat = np.array(allsat)
-#   print allsat
-   if len(allsat)==0:
+        for s in sat:
+            print s[1],s[0]
+            allsat.append([s[0],s[1]])
+            mocdata[s[0],s[1]]=saturation
+            #         imshow(mocdata)
+            #         show()
+            #      print sat
+            
+            
+        outfilehere="tmp_%d.fits"%i
+        out_fits = PF.PrimaryHDU(header=header0,data=mocdata)
+        out_fits.scale(type=out_fits.NumCode[16],bzero=32768.0,bscale=1.0)
+        print 'writing',outfilehere
+        out_fits.writeto(outfilehere, clobber=True)
+        
+    allsat = np.array(allsat)
+    #   print allsat
+    if len(allsat)==0:
 	wh=np.where(data>saturation)
    	data[wh[0],wh[1]]=saturation
- 
+        
 	return data
+        
+    clusters= cluster.hierarchy.fclusterdata(allsat, 10, criterion='distance', metric='euclidean', depth=2, method='single', R=None)
 
-   clusters= cluster.hierarchy.fclusterdata(allsat, 10, criterion='distance', metric='euclidean', depth=2, method='single', R=None)
-
-#   print clusters
-   for i in range(max(clusters)): 
-      if len(np.where(clusters == i+1)[0])>1:
-         centers.append(np.mean(allsat[np.where(clusters==i+1)[0]], axis=0))
-         print "centers", np.mean(allsat[np.where(clusters==i+1)[0]], axis=0), len(np.where(clusters==i)[0])
-   
-   print  data1.shape,data2.shape
-   for x in centers:
-      print "circle(",x[1],",",x[0],",10)"
-      ind=np.where(np.sqrt((index1-x[1])**2+(index2-x[0])**2)<RAD)
-#      print ind[0],ind[1]
-      data[ind[0],ind[1]]=saturation
+    #   print clusters
+    for i in range(max(clusters)): 
+        if len(np.where(clusters == i+1)[0])>1:
+            centers.append(np.mean(allsat[np.where(clusters==i+1)[0]], axis=0))
+            print "centers", np.mean(allsat[np.where(clusters==i+1)[0]], axis=0), len(np.where(clusters==i)[0])
+            
+    print  data1.shape,data2.shape
+    for x in centers:
+        print "circle(",x[1],",",x[0],",10)"
+        ind=np.where(np.sqrt((index1-x[1])**2+(index2-x[0])**2)<RAD)
+        #      print ind[0],ind[1]
+        data[ind[0],ind[1]]=saturation
  
-   try:
-      data[wh[0],wh[1]]=saturation
-   except:
-      pass
-   try:
-      data[wh[0]-1,wh[1]-1]=saturation
-   except:
-      pass
-   try:
-      data[wh[0]+1,wh[1]+1]=saturation
-   except:
-      pass
-   try:
-      data[wh[0]+1,wh[1]]=saturation
-   except:
-      pass
-   try:
-      data[wh[0]+1,wh[1]]=saturation
-   except:
-      pass
-   try:
-      data[wh[0]-1,wh[1]]=saturation
-   except:
-      pass
-   try:
-      data[wh[0],wh[1]-1]=saturation
-   except:
-      pass   
-   wh=np.where(data>saturation)
-   data[wh[0],wh[1]]=saturation
- 
-   return data
+    try:
+        data[wh[0],wh[1]]=saturation
+    except:
+        pass
+    try:
+        data[wh[0]-1,wh[1]-1]=saturation
+    except  IndexError:
+        pass
+    try:
+        data[wh[0]+1,wh[1]+1]=saturation
+    except IndexError:
+        pass
+    try:
+        data[wh[0]+1,wh[1]]=saturation
+    except  IndexError:
+        pass
+    try:
+        data[wh[0]+1,wh[1]]=saturation
+    except IndexError:
+        pass
+    try:
+        data[wh[0]-1,wh[1]]=saturation
+    except:
+        pass
+    try:
+        data[wh[0],wh[1]-1]=saturation
+    except:
+        pass   
+    wh=np.where(data>saturation)
+    data[wh[0],wh[1]]=saturation
+    
+    return data
 
 
 def correlate(fits,saturation, showme=False):
@@ -284,72 +284,72 @@ def correlate(fits,saturation, showme=False):
 
 ####   FINDING PHASE  ####
     if SHIFT:
-      print 'Finding phase...'
-      if CUT:    
-         mask = np.zeros(np.shape(fits[larger]))
-#         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
-         fft1 = sfft.fftn(fits[larger]*mask)
-         ifft2 = sfft.ifftn(fits[smaller]*mask)
-         R = sfft.ifftn(fft1*ifft2).real
-      else:
-         fft1 = sfft.fftn(fits[larger])
-         ifft2 = sfft.ifftn(fits[smaller])
-         R = sfft.ifftn(fft1*ifft2).real
-         if np.all(R==0): return None,None
-         print R
-         figure(4)
-         imshow(R)
-         title("correlation")
-         show()
-      phase = np.where(R == np.max(R))
-      print "phase = " + str(phase)
-
-      ### Checks if img_small has negative shift ###    
-      axis2_shift,axis1_shift = phase[0],phase[1]
-      if phase[1] :
-          if phase[1] == naxis2:
-              axis1_shift =[0,naxis2,0,naxis2]
-          elif phase[1] > naxis2/2:
-              print "phase1>naxis2/2"
-              axis1_shift =[naxis2-phase[1],naxis2,0,-(naxis2-phase[1])]
-          else:
-              print "phase1<=naxis1/2"
-              axis1_shift =[phase[1],naxis2,0,-phase[1]]
-      else:
-          print "phase1=0"
-          axis1_shift =[0,naxis2,0,naxis2]
+        print 'Finding phase...'
+        if CUT:    
+            mask = np.zeros(np.shape(fits[larger]))
+            #         mask[1275:1295,470:490]=+1#400:750,1000:1350]+=1
+            fft1 = sfft.fftn(fits[larger]*mask)
+            ifft2 = sfft.ifftn(fits[smaller]*mask)
+            R = sfft.ifftn(fft1*ifft2).real
+        else:
+            fft1 = sfft.fftn(fits[larger])
+            ifft2 = sfft.ifftn(fits[smaller])
+            R = sfft.ifftn(fft1*ifft2).real
+            if np.all(R==0): return None,None
+            print R
+            figure(4)
+            imshow(R)
+            title("correlation")
+            show()
+        phase = np.where(R == np.max(R))
+        print "phase = " + str(phase)
+        
+        ### Checks if img_small has negative shift ###    
+        axis2_shift,axis1_shift = phase[0],phase[1]
+        if phase[1] :
+            if phase[1] == naxis2:
+                axis1_shift =[0,naxis2,0,naxis2]
+            elif phase[1] > naxis2/2:
+                print "phase1>naxis2/2"
+                axis1_shift =[naxis2-phase[1],naxis2,0,-(naxis2-phase[1])]
+            else:
+                print "phase1<=naxis1/2"
+                axis1_shift =[phase[1],naxis2,0,-phase[1]]
+        else:
+            print "phase1=0"
+            axis1_shift =[0,naxis2,0,naxis2]
           
-      if phase[0] :
-          if phase[0] == naxis1:
-              axis2_shift =[0,naxis1,0,naxis1]
-          elif phase[0] > naxis1/2:
-              print "phase0>naxis2/2"
-              axis2_shift =[0,-(naxis1-phase[0]),naxis1-phase[0],naxis1]
-              print  axis2_shift
-          else:
-              print "phase0<naxis/2"
-              axis2_shift =[phase[0],naxis1,0,-phase[0]]              
-      else:
-          print "phase0=0"
-          axis2_shift =[0,naxis1,0,naxis1]
-
-      print fits[smaller].shape,fits[larger].shape
-      im1,im2= fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]]
-
-      print im1.shape,im2.shape
-      if not im1.shape == im2.shape:
-          print "shape mismatch"
-          i11=im1.shape[0]
-          i12=im1.shape[1]
-          i21=im2.shape[0]
-          i22=im2.shape[1]
-          print i11,i12,i21,i22
-          im1=im1[0:min(i11,i21),0:min(i12,i22)]
-          im2=im2[0:min(i11,i21),0:min(i12,i22)]
-      return im1,im2 
-          
+        if phase[0] :
+            if phase[0] == naxis1:
+                axis2_shift =[0,naxis1,0,naxis1]
+            elif phase[0] > naxis1/2:
+                print "phase0>naxis2/2"
+                axis2_shift =[0,-(naxis1-phase[0]),naxis1-phase[0],naxis1]
+                print  axis2_shift
+            else:
+                print "phase0<naxis/2"
+                axis2_shift =[phase[0],naxis1,0,-phase[0]]              
+        else:
+            print "phase0=0"
+            axis2_shift =[0,naxis1,0,naxis1]
+            
+        print fits[smaller].shape,fits[larger].shape
+        im1,im2= fits[larger][axis2_shift[0]:axis2_shift[1],axis1_shift[0]:axis1_shift[1]],fits[smaller][axis2_shift[2]:axis2_shift[3],axis1_shift[2]:axis1_shift[3]]
+        
+        print im1.shape,im2.shape
+        if not im1.shape == im2.shape:
+            print "shape mismatch"
+            i11=im1.shape[0]
+            i12=im1.shape[1]
+            i21=im2.shape[0]
+            i22=im2.shape[1]
+            print i11,i12,i21,i22
+            im1=im1[0:min(i11,i21),0:min(i12,i22)]
+            im2=im2[0:min(i11,i21),0:min(i12,i22)]
+        return im1,im2 
+        
   
-      '''
+        '''
       if phase[0] > naxis2/2:
          axis2_shift =  phase[0] - naxis2
       else:
