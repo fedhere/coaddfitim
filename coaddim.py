@@ -85,8 +85,8 @@ if __name__=='__main__':
     SHOW=False
     pl.ion()
     if options.interactive:
-         pl.ion()
-         SHOW=True
+        pl.ion()
+        SHOW=True
     pixmask=[0,0,-1,-1]
     if options.mask:
         pixmask=[int(m) for m in options.mask.split(',')]
@@ -254,7 +254,9 @@ if __name__=='__main__':
     exposure = (nfiles)*myexposure
     print "first image:", inpath, args
     print "stacked exposure: ",exposure
-    print "WARNING: for now all files must have the same exposure for this value to be correct. the value will enter the name of the output file, but not the header"
+    print '''WARNING: for now all files must have the same exposure 
+for this value to be correct. 
+the value will enter the name of the output file, but not the header'''
 
 
 
@@ -300,7 +302,7 @@ if __name__=='__main__':
             pl.draw()
             inrange=raw_input("input new range as x0,y0,x1,y1\n")
             if not inrange:
-                 x0,y0,x1,y1=0,0,-1,-1
+                x0,y0,x1,y1=0,0,-1,-1
             else:
                 x0,y0,x1,y1=[int(ir) for ir in inrange.split(',')]
 
@@ -310,7 +312,6 @@ if __name__=='__main__':
             print pixmask[0],pixmask[2],pixmask[1],pixmask[3]
             tmp=tmp[pixmask[0]:pixmask[2],pixmask[1]:pixmask[3]]
         if ALIGN:
-            print "here", nfiles
             for i in range(1,nfiles):
                 print "working on",allimgs[i]
                 if options.jpg:
@@ -450,7 +451,6 @@ if __name__=='__main__':
                     try: int(existing.split('_')[-1].split('.')[0])
                     except: 
                         existing=existing[1:]
-                        pass
                     outfile = base+'_' + str(np.max([int(ii.split('_')[-1].split('.')[0]) for ii in existing])  + 1) + '.fits'
 
 
