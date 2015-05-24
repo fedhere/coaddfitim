@@ -102,7 +102,7 @@ def fixim(data,maskcenters):
 
 
 def dist(pair):
-   return abs(pair[0][0]-pair[1][0])+abs(pair[0][1]-pair[0][1])
+    return abs(pair[0][0]-pair[1][0])+abs(pair[0][1]-pair[0][1])
 
 
 def sigclippedstd(arr):
@@ -123,8 +123,8 @@ def mymode(data):
     mydata=data#[where(data<5000)]
     counts = {}
     for x in mydata.flatten():
-       counts[x] = counts.get(x,0) + 1
-#       print counts[x]
+        counts[x] = counts.get(x,0) + 1
+        #       print counts[x]
     maxcount = max(counts.values())
     modelist = []
     for x in counts:
@@ -433,5 +433,8 @@ def correlate(fits,saturation, showme=False):
 #    print "smaller cut", fits[smaller][int(slicey2[0]):int(slicey2[1]), int(slicex2[0]):int(slicex2[1])].shape
     
     #coadded= 
-    #return (fits[larger][int(slicex1[0]):int(slicex1[1]), int(slicey1[0]):int(slicey1[1])],fits[smaller][int(slicex2[0]):int(slicex2[1]), int(slicey2[0]):int(slicey2[1])])
+    #return (fits[larger][int(slicex1[0]):int(slicex1[1]), \
+        int(slicey1[0]):int(slicey1[1])],\
+        fits[smaller][int(slicex2[0]):int(slicex2[1]), \
+        int(slicey2[0]):int(slicey2[1])])
       '''
